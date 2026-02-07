@@ -1,7 +1,6 @@
 package com.scraping;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.Connection.Response;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
@@ -11,7 +10,7 @@ import java.util.Scanner;
 public class WebScraper {
     private final String url;
     private Document doc;
-    private Response statusCode;
+    private Integer statusCode;
 
     public WebScraper(String url) {
         this.url = url;
@@ -21,9 +20,10 @@ public class WebScraper {
 
     public int checkConnection() {
         try {
-            this.statusCode = Jsoup.connect(url).userAgent("Mozilla/5.0").timeout(100000).ignoreHttpErrors(true).execute();
+            System.out.println("Connecting to " + url + "..., Please wait...");
+            this.statusCode = Jsoup.connect(url).userAgent("Mozilla/5.0").timeout(100000).ignoreHttpErrors(true).execute().statusCode();
             System.out.println("Connection successful to: " + url);
-            return this.statusCode.statusCode();
+            return this.statusCode;
         } catch(IOException e) {
             System.err.println("Failed to connect to: " + url);
         }
@@ -33,7 +33,7 @@ public class WebScraper {
 
     public void run() {
         try {
-            if(this.statusCode == null || this.statusCode.statusCode() != 200) {
+            if(this.statusCode == null || this.statusCode != 200) {
                 System.err.println("No connection established. Please check the connection first.");
                 return;
             }
@@ -56,7 +56,17 @@ public class WebScraper {
     }
 
     static void main() {
-        WebScraper scraper = new WebScraper("https://www.mediamarkt.es");
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Introduce la URL (ej. https://www.mediamarkt.es): ");
+        String inputUrl = scanner.nextLine().trim();
+        scanner.close();
+
+        if (inputUrl.isEmpty()) {
+            System.err.println("URL vacía. Saliendo.");
+            return;
+        }
+
+        WebScraper scraper = new WebScraper(inputUrl);
         scraper.checkConnection();
         scraper.run();
         scraper.readAtags();
